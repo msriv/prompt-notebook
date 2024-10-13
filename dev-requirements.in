@@ -1,0 +1,5 @@
+-r requirements.in
+
+# Additional development tools
+pytest-cov
+mypy

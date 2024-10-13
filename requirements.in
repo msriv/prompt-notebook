@@ -1,0 +1,22 @@
+# Core dependencies
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+redis[hiredis]
+alembic
+asyncpg
+
+# Testing
+pytest
+httpx
+pytest-asyncio
+
+# Development tools
+black
+flake8
+isort
+
+# Utilities
+python-dotenv
