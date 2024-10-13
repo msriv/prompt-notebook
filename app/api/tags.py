@@ -48,12 +48,27 @@ def delete_tag(prompt_id: UUID, version: int, tag_id: UUID, db: Session = Depend
     db.commit()
     return {"status": "ok"}
 
-@router.get("/{prompt_id}/tags/{tag_name}", response_model=VersionResponse)
-def get_prompt_by_tag(prompt_id: UUID, tag_name: str, db: Session = Depends(get_db)):
+@router.get("/{prompt_id}/tags/{tag_id_or_name}", response_model=VersionResponse)
+def get_prompt_by_tag(prompt_id: UUID, tag_id_or_name: str, db: Session = Depends(get_db)):
+    # Try to parse tag_id_or_name as UUID first
+    try:
+        tag_id = UUID(tag_id_or_name)
+        tag_filter = Tag.id == tag_id
+    except ValueError:
+        # If it's not a valid UUID, treat it as a tag name
+        tag_filter = Tag.name == tag_id_or_name
+
     version = db.query(Version).join(Tag).filter(
         Version.prompt_id == prompt_id,
-        Tag.name == tag_name
+        tag_filter
     ).order_by(Version.version_number.desc()).first()
+
     if not version:
         raise HTTPException(status_code=404, detail="Version with tag not found")
-    return VersionResponse(id=UUID(str(version.prompt_id)), version=int(str(version.version_number)), content=str(version.content), created_at=datetime.fromisoformat(str(version.created_at)))
+
+    return VersionResponse(
+        id=UUID(str(version.prompt_id)),
+        version=int(str(version.version_number)),
+        content=str(version.content),
+        created_at=datetime.fromisoformat(str(version.created_at))
+    )
