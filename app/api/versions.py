@@ -10,7 +10,7 @@ from app.schemas.version import  VersionResponse
 router = APIRouter(prefix="/v1/prompts/{prompt_id}/versions")
 
 @router.post("/", response_model=VersionResponse)
-def create_version(prompt_id: UUID, version: VersionCreate, db: Session = Depends(get_db)):
+def create_version(prompt_id: UUID, version: Version, db: Session = Depends(get_db)):
     latest_version = db.query(Version).filter(Version.prompt_id == prompt_id).order_by(Version.version_number.desc()).first()
     new_version_number = 1 if latest_version is None else latest_version.version_number + 1
 

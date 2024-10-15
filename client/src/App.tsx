@@ -1,9 +1,11 @@
-import { Flex, Heading, Text, Button, Box } from "@radix-ui/themes";
+import { Flex, Text } from "@radix-ui/themes";
 import { IconNotebook } from "@tabler/icons-react";
+import { ReactElement } from "react";
+import { Outlet } from "react-router-dom";
 
-export default function MyApp() {
+export default function App(): ReactElement {
   return (
-    <Flex direction="column" justify="between" gap="2">
+    <Flex direction="column" justify="between" gap="2" className="p-2">
       <Flex
         direction="row"
         align="center"
@@ -15,11 +17,8 @@ export default function MyApp() {
           <IconNotebook />
           <Text>Prompt Notebook</Text>
         </Flex>
-        <Button>Login</Button>
       </Flex>
-      <Heading>Welcome to Prompt Notebook</Heading>
-      <Text>This is a simple prompt management tool for your GenAI Apps</Text>
-      <Box className=""></Box>
+      <Outlet />
     </Flex>
   );
 }

@@ -12,6 +12,7 @@ services:
       - NODE_ENV=development
     networks:
       - app-network
+    command: sh -c "bun install && bun run dev"
 
   server:
     build: .

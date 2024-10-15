@@ -3,28 +3,28 @@ from typing import Any, List, Optional
 from datetime import datetime
 from uuid import UUID
 
-class CategoryBase(BaseModel):
+class CollectionBase(BaseModel):
     name: str
     slug: str
     description: Optional[str] = None
 
-class CategoryCreate(CategoryBase):
+class CollectionCreate(CollectionBase):
     pass
 
-class CategoryUpdate(CategoryBase):
+class CollectionUpdate(CollectionBase):
     pass
 
-class CategoryInDB(CategoryBase):
+class CollectionInDB(CollectionBase):
     id: UUID
     created_at: datetime
 
     class Config:
         orm_mode = True
 
-class CategoryWithPrompts(CategoryInDB):
+class CollectionWithPrompts(CollectionInDB):
     prompts: dict[str, dict[str, Any]]
 
-class CategoryList(CategoryBase):
+class CollectionList(CollectionBase):
     id: UUID
 
     class Config:
