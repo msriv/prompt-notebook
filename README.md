@@ -30,7 +30,7 @@ There are two ways to set up the Prompt Notebook project: manual setup and using
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/prompt-notebook.git
+   git clone https://github.com/msriv/prompt-notebook.git
    cd prompt-notebook
    ```
 
