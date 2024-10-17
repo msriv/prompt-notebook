@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -16,3 +16,4 @@ class Prompt(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     versions = relationship("Version", back_populates="prompt", cascade="all, delete-orphan")
     collections = relationship("Collection", secondary=collection_prompt, back_populates="prompts")
+    template_format = Column(Enum('f-string', 'jinja2', name='template_format'), nullable=False, default='f-string')

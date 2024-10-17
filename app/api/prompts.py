@@ -14,7 +14,7 @@ router = APIRouter(prefix="/v1/prompts")
 
 @router.post("/", response_model=PromptResponse)
 def create_prompt(prompt: PromptCreate, db: Session = Depends(get_db)):
-    db_prompt = Prompt(name=prompt.name, slug=prompt.slug, description=prompt.description)
+    db_prompt = Prompt(name=prompt.name, slug=prompt.slug, description=prompt.description, template_format=prompt.template_format)
     db.add(db_prompt)
     db.commit()
     db.refresh(db_prompt)
@@ -24,13 +24,12 @@ def create_prompt(prompt: PromptCreate, db: Session = Depends(get_db)):
     db.add(initial_version)
     db.commit()
 
-
-
     return PromptResponse(
         id=UUID(str(db_prompt.id)),
         name=str(db_prompt.name),
         slug=str(db_prompt.slug),
         description=str(db_prompt.description),
+        template_format=str(db_prompt.template_format),
         versions=[v.version_number for v in db_prompt.versions],
         created_at=datetime.fromisoformat(str(db_prompt.created_at))
     )
@@ -43,6 +42,7 @@ def list_prompts(db: Session = Depends(get_db)):
         name=str(prompt.name),
         slug=str(prompt.slug),
         description=str(prompt.description),
+        template_format=str(prompt.template_format),
         versions=[v.version_number for v in prompt.versions],
         created_at=datetime.fromisoformat(str(prompt.created_at))
     ) for prompt in prompts]
@@ -72,6 +72,7 @@ def update_prompt(prompt_id: UUID, prompt: PromptUpdate, db: Session = Depends(g
         name=str(db_prompt.name),
         slug=str(db_prompt.slug),
         description=str(db_prompt.description),
+        template_format=str(db_prompt.template_format),
         created_at=datetime.fromisoformat(str(db_prompt.created_at)),
         versions=[v.version_number for v in db_prompt.versions]
     )
@@ -86,6 +87,7 @@ def get_prompt(prompt_id: UUID, db: Session = Depends(get_db)):
         id=UUID(str(prompt.id)),
         name=str(prompt.name),
         slug=str(prompt.slug),
+        template_format=str(prompt.template_format),
         description=str(prompt.description) if prompt.description is not None else None,
         created_at=datetime.fromisoformat(str(prompt.created_at)),  # datetime objects don't need typecasting
         versions=versions

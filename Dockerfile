@@ -1,32 +1,33 @@
-# Build stage
-FROM python:3.12 AS builder
+# Base image for both Python and Bun
+FROM oven/bun:1-debian
+
+# Install Python and pip
+RUN apt-get update && apt-get install -y python3 python3-pip
 
 WORKDIR /app
 
-# Install pip-tools
-RUN pip install pip-tools
-
-# Copy requirements file
+# Install Python dependencies
 COPY requirements.in .
+RUN pip3 install pip-tools
+RUN pip-compile requirements.in && pip3 install -r requirements.txt
 
-# Generate requirements.txt and install dependencies
-RUN pip-compile requirements.in && pip-sync
+# Install Bun dependencies for React app
+WORKDIR /app/client
+COPY client/package.json client/bun.lockb ./
+RUN bun install
 
-# Final stage
-FROM python:3.12-slim
-
+# Copy the rest of the application
 WORKDIR /app
-
-# Copy only the necessary files from the builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# Copy your application code
 COPY . .
-COPY alembic.ini /app/alembic.ini
 
-# Ensure run_migrations.py is in the correct location
-COPY ./run_migrations.py .
+# Install Supervisor
+RUN apt-get install -y supervisor
+
+# Copy Supervisor configuration
+COPY supervisord.conf /etc/supervisord.conf
+
+# Expose ports for Python backend and React dev server
+EXPOSE 8000 3000
 
 # Copy and set permissions for the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
@@ -35,5 +36,5 @@ RUN chmod +x /entrypoint.sh
 # Set the entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Set the command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

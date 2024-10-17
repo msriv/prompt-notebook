@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Theme } from "@radix-ui/themes";
+import { Flex, Theme } from "@radix-ui/themes";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -8,6 +8,7 @@ import HomePage from "./pages/home";
 import App from "./App";
 import { Provider } from "react-redux";
 import { store } from "./store";
+import NewPromptPage from "./pages/prompt-editor";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <HomePage />,
+      },
+      {
+        path: "/prompt-editor",
+        element: <NewPromptPage />,
       },
     ],
   },
@@ -29,10 +34,12 @@ createRoot(document.getElementById("root")!).render(
         accentColor="violet"
         grayColor="mauve"
         radius="large"
-        scaling="100%"
+        scaling="90%"
         panelBackground="translucent"
       >
-        <RouterProvider router={router} />
+        <Flex direction="column" gap="2" className="h-screen">
+          <RouterProvider router={router} />
+        </Flex>
       </Theme>
     </Provider>
   </StrictMode>,

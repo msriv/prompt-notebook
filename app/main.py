@@ -20,7 +20,7 @@ app = FastAPI()
 # Add CORS middleware first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +36,7 @@ async def debug_middleware(request: Request, call_next):
     return response
 
 # Add cache middleware
-app.middleware("http")(cache_middleware)
+# app.middleware("http")(cache_middleware)
 
 # Include routers
 app.include_router(prompts.router)

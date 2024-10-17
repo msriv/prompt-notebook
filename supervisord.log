@@ -1,0 +1,79 @@
+2024-10-15 17:57:13,846 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-15 17:57:13,848 INFO supervisord started with pid 1
+2024-10-15 17:57:14,853 INFO spawned: 'react' with pid 8
+2024-10-15 17:57:14,855 INFO spawned: 'uvicorn' with pid 9
+2024-10-15 17:57:16,759 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-15 17:57:16,762 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-16 13:51:00,245 WARN received SIGTERM indicating exit request
+2024-10-16 13:51:00,254 INFO waiting for react, uvicorn to die
+2024-10-16 13:51:00,683 INFO stopped: uvicorn (exit status 0)
+2024-10-16 13:51:00,684 INFO reaped unknown pid 12 (exit status 0)
+2024-10-16 13:51:01,124 INFO stopped: react (exit status 0)
+2024-10-16 14:09:59,150 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-16 14:09:59,153 INFO supervisord started with pid 1
+2024-10-16 14:10:00,161 INFO spawned: 'react' with pid 8
+2024-10-16 14:10:00,169 INFO spawned: 'uvicorn' with pid 9
+2024-10-16 14:10:01,257 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-16 14:10:01,258 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-16 19:17:04,435 WARN received SIGTERM indicating exit request
+2024-10-16 19:17:04,445 INFO waiting for react, uvicorn to die
+2024-10-16 19:17:04,915 INFO stopped: uvicorn (exit status 0)
+2024-10-16 19:17:04,917 INFO reaped unknown pid 20 (exit status 0)
+2024-10-16 19:17:06,284 INFO stopped: react (exit status 0)
+2024-10-16 19:24:15,982 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-16 19:24:15,997 INFO supervisord started with pid 1
+2024-10-16 19:24:17,038 INFO spawned: 'react' with pid 8
+2024-10-16 19:24:17,047 INFO spawned: 'uvicorn' with pid 9
+2024-10-16 19:24:18,421 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-16 19:24:18,429 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-16 19:24:35,963 WARN received SIGTERM indicating exit request
+2024-10-16 19:24:35,966 INFO waiting for react, uvicorn to die
+2024-10-16 19:24:36,180 INFO stopped: uvicorn (exit status 0)
+2024-10-16 19:24:36,180 INFO reaped unknown pid 20 (exit status 0)
+2024-10-16 19:24:36,213 INFO stopped: react (exit status 0)
+2024-10-16 19:24:36,213 INFO reaped unknown pid 32 (exit status 0)
+2024-10-16 19:27:30,731 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-16 19:27:30,733 INFO supervisord started with pid 1
+2024-10-16 19:27:31,738 INFO spawned: 'react' with pid 8
+2024-10-16 19:27:31,741 INFO spawned: 'uvicorn' with pid 9
+2024-10-16 19:27:32,853 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-16 19:27:32,854 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-17 08:53:41,546 WARN received SIGTERM indicating exit request
+2024-10-17 08:53:41,566 INFO waiting for react, uvicorn to die
+2024-10-17 08:53:42,140 INFO stopped: uvicorn (exit status 0)
+2024-10-17 08:53:42,142 INFO reaped unknown pid 20 (exit status 0)
+2024-10-17 08:53:43,714 INFO stopped: react (exit status 0)
+2024-10-17 09:00:42,003 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-17 09:00:42,005 INFO supervisord started with pid 1
+2024-10-17 09:00:43,011 INFO spawned: 'react' with pid 8
+2024-10-17 09:00:43,014 INFO spawned: 'uvicorn' with pid 9
+2024-10-17 09:00:44,049 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-17 09:00:44,050 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-17 11:26:43,089 WARN received SIGTERM indicating exit request
+2024-10-17 11:26:43,101 INFO waiting for react, uvicorn to die
+2024-10-17 11:26:43,568 INFO stopped: uvicorn (exit status 0)
+2024-10-17 11:26:43,572 INFO reaped unknown pid 12 (exit status 0)
+2024-10-17 11:26:44,912 INFO stopped: react (exit status 0)
+2024-10-17 11:26:44,913 INFO reaped unknown pid 32 (exit status 0)
+2024-10-17 11:27:30,772 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-17 11:27:30,774 INFO supervisord started with pid 1
+2024-10-17 11:27:31,777 INFO spawned: 'react' with pid 8
+2024-10-17 11:27:31,779 INFO spawned: 'uvicorn' with pid 9
+2024-10-17 11:27:33,723 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-17 11:27:33,729 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-17 11:35:21,831 WARN received SIGTERM indicating exit request
+2024-10-17 11:35:21,836 INFO waiting for react, uvicorn to die
+2024-10-17 11:35:22,118 INFO stopped: uvicorn (exit status 0)
+2024-10-17 11:35:22,119 INFO reaped unknown pid 19 (exit status 0)
+2024-10-17 11:35:22,443 INFO stopped: react (exit status 0)
+2024-10-17 11:36:11,517 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-17 11:36:11,519 INFO supervisord started with pid 1
+2024-10-17 11:36:12,525 INFO spawned: 'react' with pid 8
+2024-10-17 11:36:12,528 INFO spawned: 'uvicorn' with pid 9
+2024-10-17 11:36:14,166 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-17 11:36:14,166 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-17 12:55:33,384 WARN received SIGTERM indicating exit request
+2024-10-17 12:55:33,397 INFO waiting for react, uvicorn to die
+2024-10-17 12:55:33,883 INFO stopped: uvicorn (exit status 0)
+2024-10-17 12:55:33,884 INFO reaped unknown pid 20 (exit status 0)
+2024-10-17 12:55:35,204 INFO stopped: react (exit status 0)

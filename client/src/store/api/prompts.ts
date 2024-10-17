@@ -7,10 +7,6 @@ export const promptsAPI = createApi({
     getPrompts: builder.query({
       query: () => ({
         url: `/`,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
       }),
       providesTags: ["Prompts"],
     }),
