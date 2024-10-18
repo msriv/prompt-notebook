@@ -16,11 +16,11 @@ Prompt Notebook is a project that allows users to manage and organize prompts fo
 
 ## Features
 
-- Create and manage prompts for different AI models
-- Organize prompts into categories or notebooks
-- Integration with OpenAI and Anthropic AI services
-- User-friendly web interface
-- Secure authentication and authorization
+- Prompt versioning and tagging
+- Organize prompts into collections
+- Caching support for faster responses
+- LLM testing support
+- Prompt templatization with variables (Currently supporting Jinja2, F-String variables)
 
 ## Setup
 
