@@ -7,6 +7,7 @@ class CollectionBase(BaseModel):
     name: str
     slug: str
     description: Optional[str] = None
+    project_id: UUID
 
 class CollectionCreate(CollectionBase):
     pass

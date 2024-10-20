@@ -5,8 +5,8 @@ export const promptsAPI = createApi({
   tagTypes: ["Prompts"],
   endpoints: (builder) => ({
     getPrompts: builder.query({
-      query: () => ({
-        url: `/`,
+      query: ({ project_id }) => ({
+        url: `/?project_id=${project_id}`,
       }),
       providesTags: ["Prompts"],
     }),
@@ -20,6 +20,10 @@ export const promptsAPI = createApi({
     }),
     getPrompt: builder.query({
       query: (promptId) => `/${promptId}`,
+      providesTags: ["Prompts"],
+    }),
+    getPromptVersion: builder.query({
+      query: ({ promptId, version }) => `/${promptId}/versions/${version}`,
       providesTags: ["Prompts"],
     }),
     updatePrompt: builder.mutation<{}, { promptId: string; body: any }>({

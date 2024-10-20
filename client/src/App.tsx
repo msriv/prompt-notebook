@@ -1,9 +1,58 @@
-import { Flex, Text } from "@radix-ui/themes";
-import { IconNotebook } from "@tabler/icons-react";
-import { ReactElement } from "react";
-import { Outlet } from "react-router-dom";
+import { Flex, Select, Text } from "@radix-ui/themes";
+import { IconNotebook, IconPlus } from "@tabler/icons-react";
+import { ReactElement, useEffect, useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import {
+  useListProjectsQuery,
+  useCreateProjectMutation,
+} from "./store/api/projects";
+import CreateProjectDialog from "./components/CreateProjectDialog";
+import { useAppDispatch } from "./store/hooks";
+import { setCurrentProject } from "./store/slices/projects";
+
+interface Project {
+  id: string;
+  name: string;
+}
 
 export default function App(): ReactElement {
+  const navigate = useNavigate();
+  const { data, isFetching, refetch } = useListProjectsQuery({});
+  const [createProject] = useCreateProjectMutation();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      dispatch(setCurrentProject(data[0].id));
+    }
+  }, [data, dispatch]);
+
+  const handleCreateProject = async (
+    name: string,
+    slug: string,
+    description: string,
+  ) => {
+    await createProject({ name, slug, description });
+    setShowCreateDialog(false);
+    refetch();
+  };
+
+  if (isFetching) return <div>Loading...</div>;
+
+  if (!data || data.length === 0) {
+    if (!showCreateDialog) {
+      setShowCreateDialog(true);
+    }
+    return (
+      <CreateProjectDialog
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onCreateProject={handleCreateProject}
+      />
+    );
+  }
+
   return (
     <Flex
       direction="column"
@@ -22,6 +71,32 @@ export default function App(): ReactElement {
           <IconNotebook />
           <Text>Prompt Notebook</Text>
         </Flex>
+        <Select.Root
+          defaultValue={data[0].id}
+          onValueChange={(value) => {
+            if (value === "new") {
+              setShowCreateDialog(true);
+            } else {
+              dispatch(setCurrentProject(value));
+              navigate("/");
+            }
+          }}
+        >
+          <Select.Trigger placeholder="Select a project" />
+          <Select.Content>
+            {data.map((project: Project) => (
+              <Select.Item key={project.id} value={project.id}>
+                {project.name}
+              </Select.Item>
+            ))}
+            <Select.Item value="new">
+              <Flex align="center" gap="2">
+                <IconPlus size={16} />
+                Create New Project
+              </Flex>
+            </Select.Item>
+          </Select.Content>
+        </Select.Root>
       </Flex>
       <Flex
         direction="column"
@@ -29,6 +104,11 @@ export default function App(): ReactElement {
       >
         <Outlet />
       </Flex>
+      <CreateProjectDialog
+        isOpen={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onCreateProject={handleCreateProject}
+      />
     </Flex>
   );
 }

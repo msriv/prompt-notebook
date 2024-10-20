@@ -8,7 +8,7 @@ import HomePage from "./pages/home";
 import App from "./App";
 import { Provider } from "react-redux";
 import { store } from "./store";
-import NewPromptPage from "./pages/prompt-editor";
+import PromptEditor from "./components/PromptEditor";
 
 const router = createBrowserRouter([
   {
@@ -20,8 +20,12 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: "/prompt-editor",
-        element: <NewPromptPage />,
+        path: "/prompts/new",
+        element: <PromptEditor />,
+      },
+      {
+        path: "/prompts/:id/edit",
+        element: <PromptEditor />,
       },
     ],
   },

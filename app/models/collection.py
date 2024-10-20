@@ -19,3 +19,5 @@ class Collection(Base):
     description = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     prompts = relationship("Prompt", secondary=collection_prompt, back_populates="collections")
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id"))
+    project = relationship("Project", back_populates="collections")

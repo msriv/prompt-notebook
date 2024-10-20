@@ -15,7 +15,7 @@ const HomePage = () => {
               <Card
                 asChild
                 className="cursor-pointer"
-                onClick={() => navigate("/prompt-editor")}
+                onClick={() => navigate("/prompts/new")}
               >
                 <button>
                   <Flex gap="3" align="center">

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Button,
   Callout,
@@ -8,13 +8,22 @@ import {
   TextArea,
   TextField,
 } from "@radix-ui/themes";
-import { IconDeviceFloppy, IconInfoCircle } from "@tabler/icons-react";
+import {
+  IconArrowBack,
+  IconDeviceFloppy,
+  IconInfoCircle,
+  IconX,
+} from "@tabler/icons-react";
 import { markdown } from "@codemirror/lang-markdown";
 import { Extension } from "@codemirror/state";
 import { EditorView, Decoration } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 import CodeMirror from "@uiw/react-codemirror";
 import { promptsAPI } from "../store/api/prompts";
+import { useAppSelector } from "../store/hooks";
+import { useNavigate, useParams } from "react-router-dom";
+import { skipToken } from "@reduxjs/toolkit/query";
+import TestPrompt from "./TestPrompt";
 
 const customHighlighter = (format: string): Extension => {
   const variableRegex =
@@ -58,14 +67,54 @@ const customTheme = EditorView.theme({
   },
 });
 
-const NewPromptPage = () => {
+const PromptEditor = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const currentProjectId = useAppSelector(
+    (state) => state.project.currentProjectId,
+  );
+
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [format, setFormat] = useState("jinja2");
   const [content, setContent] = useState("");
+  const [versions, setVersions] = useState([]);
+  const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   const [createPrompt] = promptsAPI.useCreatePromptMutation();
+  const [updatePrompt] = promptsAPI.useUpdatePromptMutation();
+  const { data: existingPrompt, isLoading } = promptsAPI.useGetPromptQuery(id, {
+    skip: !id,
+  });
+  const { data: promptVersion } = promptsAPI.useGetPromptVersionQuery(
+    id && selectedVersion
+      ? {
+          promptId: id,
+          version: selectedVersion,
+        }
+      : skipToken,
+  );
+
+  useEffect(() => {
+    if (existingPrompt) {
+      setName(existingPrompt.name);
+      setSlug(existingPrompt.slug);
+      setDescription(existingPrompt.description);
+      setFormat(existingPrompt.template_format);
+      setVersions(existingPrompt.versions);
+      setSelectedVersion(existingPrompt.versions.at(-1));
+    }
+  }, [existingPrompt]);
+
+  useEffect(() => {
+    if (promptVersion) {
+      setContent(promptVersion.content);
+    }
+  }, [promptVersion]);
 
   const extensions = useCallback(
     (): Extension[] => [
@@ -79,23 +128,48 @@ const NewPromptPage = () => {
   );
 
   const handleSavePrompt = async () => {
-    const response = await createPrompt({
-      name: name,
-      slug: slug,
-      description: description,
-      content: content,
-      format: format,
-    }).unwrap();
-    if (response) {
-      console.log("Prompt created successfully:", response);
+    setIsSaving(true);
+    const promptData = {
+      name,
+      slug,
+      description,
+      content,
+      format,
+      project_id: currentProjectId,
+    };
+
+    if (id) {
+      await updatePrompt({ promptId: id, body: promptData }).unwrap();
+    } else {
+      await createPrompt(promptData).unwrap();
+      navigate("/"); // Redirect to prompts list after saving
+    }
+    setIsSaving(false);
+  };
+
+  const handleAddTag = () => {
+    if (newTag && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setNewTag("");
     }
   };
 
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  if (id && isLoading) return <div>Loading...</div>;
+
   return (
     <Flex direction="column" gap="2" className="h-full overflow-hidden">
-      <Flex direction="row" justify="end" mb="2" gap={"2"}>
-        <Button onClick={handleSavePrompt}>
-          <IconDeviceFloppy strokeWidth={1.5} size={20} /> Save Prompt
+      <Flex direction="row" justify="between" mb="2" gap={"2"}>
+        <Button variant="soft" onClick={() => navigate("/")}>
+          <IconArrowBack strokeWidth={1.5} size={20} />
+          Back to Prompts
+        </Button>
+        <Button onClick={handleSavePrompt} loading={isSaving}>
+          <IconDeviceFloppy strokeWidth={1.5} size={20} />
+          {id ? "Update Prompt" : "Create Prompt"}
         </Button>
       </Flex>
       <Flex
@@ -227,11 +301,86 @@ const NewPromptPage = () => {
                 </Callout.Text>
               </Callout.Root>
             </Flex>
+            {id && (
+              <>
+                <Flex direction="column" gap="3" flexGrow={"1"}>
+                  <label>
+                    <Text as="div" size="2" mb="1" weight="bold">
+                      Versions
+                    </Text>
+                    <Select.Root
+                      value={`${selectedVersion}`}
+                      onValueChange={(value) =>
+                        setSelectedVersion(parseInt(value))
+                      }
+                    >
+                      <Select.Trigger
+                        placeholder="Pick a Format"
+                        className="w-full"
+                      />
+                      <Select.Content className="w-full">
+                        {versions.map((version, index) => (
+                          <Select.Item key={index} value={`${version}`}>
+                            {`v${version}`}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  </label>
+                </Flex>
+                <Flex direction="column" gap="3" flexGrow={"1"}>
+                  <label>
+                    <Text as="div" size="2" mb="1" weight="bold">
+                      Tags
+                    </Text>
+                    <Flex direction="row" gap="2" wrap="wrap" mb="2">
+                      {tags.map((tag) => (
+                        <Flex
+                          key={tag}
+                          align="center"
+                          justify="between"
+                          px="2"
+                          py="1"
+                          style={{
+                            backgroundColor: "var(--accent-3)",
+                            borderRadius: "var(--radius-2)",
+                          }}
+                        >
+                          <Text size="1">{tag}</Text>
+                          <Button
+                            variant="ghost"
+                            size="1"
+                            onClick={() => handleRemoveTag(tag)}
+                          >
+                            <IconX strokeWidth={1.5} size={16} />
+                          </Button>
+                        </Flex>
+                      ))}
+                    </Flex>
+                    <Flex direction="row" gap="2">
+                      <TextField.Root
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Enter a tag"
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddTag();
+                          }
+                        }}
+                      />
+                      <Button onClick={handleAddTag}>Add Tag</Button>
+                    </Flex>
+                  </label>
+                </Flex>
+              </>
+            )}
           </Flex>
+          <TestPrompt promptFormat={format} promptContent={content} />
         </Flex>
       </Flex>
     </Flex>
   );
 };
 
-export default NewPromptPage;
+export default PromptEditor;

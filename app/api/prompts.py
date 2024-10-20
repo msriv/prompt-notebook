@@ -1,20 +1,37 @@
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.models.prompt import Prompt
 from app.models.version import Version
-from app.schemas.prompt import PromptCreate, PromptResponse, PromptUpdate
+from app.models.project import Project
+from app.schemas.prompt import PromptCreate, PromptResponse, PromptUpdate, TemplateFormat
 from app.schemas.version import VersionResponse
 
 router = APIRouter(prefix="/v1/prompts")
 
 @router.post("/", response_model=PromptResponse)
 def create_prompt(prompt: PromptCreate, db: Session = Depends(get_db)):
-    db_prompt = Prompt(name=prompt.name, slug=prompt.slug, description=prompt.description, template_format=prompt.template_format)
+    if prompt.project_id:
+        project = db.query(Project).filter(Project.id == prompt.project_id).first()
+    elif prompt.project_slug:
+        project = db.query(Project).filter(Project.slug == prompt.project_slug).first()
+    else:
+        raise HTTPException(status_code=400, detail="Either project_id or project_slug must be provided")
+
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    db_prompt = Prompt(
+        name=prompt.name,
+        slug=prompt.slug,
+        description=prompt.description,
+        template_format=prompt.template_format,
+        project_id=project.id
+    )
     db.add(db_prompt)
     db.commit()
     db.refresh(db_prompt)
@@ -25,26 +42,43 @@ def create_prompt(prompt: PromptCreate, db: Session = Depends(get_db)):
     db.commit()
 
     return PromptResponse(
-        id=UUID(str(db_prompt.id)),
-        name=str(db_prompt.name),
-        slug=str(db_prompt.slug),
-        description=str(db_prompt.description),
-        template_format=str(db_prompt.template_format),
-        versions=[v.version_number for v in db_prompt.versions],
-        created_at=datetime.fromisoformat(str(db_prompt.created_at))
+        id=str(db_prompt.id),
+        name=db_prompt.name,
+        slug=db_prompt.slug,
+        description=db_prompt.description,
+        template_format=TemplateFormat(db_prompt.template_format),
+        versions=[1],
+        created_at=db_prompt.created_at,
+        project_id=str(db_prompt.project_id)
     )
 
 @router.get("/", response_model=List[PromptResponse])
-def list_prompts(db: Session = Depends(get_db)):
-    prompts = db.query(Prompt).all()
+def list_prompts(
+    project_id: Optional[UUID] = Query(None),
+    project_slug: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    if not project_id and not project_slug:
+        raise HTTPException(status_code=400, detail="Either project_id or project_slug must be provided")
+
+    if project_id:
+        project = db.query(Project).filter(Project.id == project_id).first()
+    else:
+        project = db.query(Project).filter(Project.slug == project_slug).first()
+
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    prompts = db.query(Prompt).filter(Prompt.project_id == project.id).all()
     return [PromptResponse(
-        id=UUID(str(prompt.id)),
-        name=str(prompt.name),
-        slug=str(prompt.slug),
-        description=str(prompt.description),
-        template_format=str(prompt.template_format),
+        id=str(prompt.id),
+        name=prompt.name,
+        slug=prompt.slug,
+        description=prompt.description,
+        template_format=TemplateFormat(prompt.template_format),
         versions=[v.version_number for v in prompt.versions],
-        created_at=datetime.fromisoformat(str(prompt.created_at))
+        created_at=prompt.created_at,
+        project_id=str(prompt.project_id)
     ) for prompt in prompts]
 
 @router.put("/{prompt_id}", response_model=PromptResponse)
@@ -68,13 +102,14 @@ def update_prompt(prompt_id: UUID, prompt: PromptUpdate, db: Session = Depends(g
     db.refresh(db_prompt)
 
     return PromptResponse(
-        id=UUID(str(db_prompt.id)),
-        name=str(db_prompt.name),
-        slug=str(db_prompt.slug),
-        description=str(db_prompt.description),
-        template_format=str(db_prompt.template_format),
-        created_at=datetime.fromisoformat(str(db_prompt.created_at)),
-        versions=[v.version_number for v in db_prompt.versions]
+        id=db_prompt.id,
+        name=db_prompt.name,
+        slug=db_prompt.slug,
+        description=db_prompt.description,
+        template_format=db_prompt.template_format,
+        created_at=db_prompt.created_at,
+        versions=[v.version_number for v in db_prompt.versions],
+        project_id=db_prompt.project_id
     )
 
 @router.get("/{prompt_id}", response_model=PromptResponse)
@@ -84,13 +119,14 @@ def get_prompt(prompt_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Prompt not found")
     versions = [version.version_number for version in prompt.versions]
     return PromptResponse(
-        id=UUID(str(prompt.id)),
-        name=str(prompt.name),
-        slug=str(prompt.slug),
-        template_format=str(prompt.template_format),
-        description=str(prompt.description) if prompt.description is not None else None,
-        created_at=datetime.fromisoformat(str(prompt.created_at)),  # datetime objects don't need typecasting
-        versions=versions
+        id=prompt.id,
+        name=prompt.name,
+        slug=prompt.slug,
+        template_format=prompt.template_format,
+        description=prompt.description,
+        created_at=prompt.created_at,
+        versions=versions,
+        project_id=prompt.project_id
     )
 
 @router.delete("/{prompt_id}", response_model=dict)
@@ -108,8 +144,8 @@ def get_prompt_version(prompt_id: UUID, version: int, db: Session = Depends(get_
     if not version:
         raise HTTPException(status_code=404, detail="Version not found")
     return VersionResponse(
-        id=UUID(str(version.prompt_id)),
-        version=int(str(version.version_number)),
-        content=str(version.content),
-        created_at=datetime.fromisoformat(str(version.created_at))
+        id=version.prompt_id,
+        version=version.version_number,
+        content=version.content,
+        created_at=version.created_at
     )

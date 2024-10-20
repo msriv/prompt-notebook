@@ -1,30 +1,18 @@
-import { Flex, Text, Button, SegmentedControl } from "@radix-ui/themes";
+import { Flex, Text, Button, Dialog } from "@radix-ui/themes";
 import { IconPlayerPlay } from "@tabler/icons-react";
-import VariablesTable from "./VariablesTable";
-import CodeMirror from "@uiw/react-codemirror";
+import TestPromptDialog from "./TestPromptDialog";
+import { useState, useCallback, useMemo } from "react";
 
-import { json } from "@codemirror/lang-json";
-import { useCallback, useState } from "react";
+interface TestPromptProps {
+  promptContent: string;
+  promptFormat: string;
+}
 
-const TestPrompt = () => {
-  const [variablesView, setVariablesView] = useState("table");
-  const [variables, setVariables] = useState<{ [key: string]: string }>({});
-
-  const handleVariablesChange = (newVariables: string) => {
-    try {
-      const parsedVariables = JSON.parse(newVariables);
-      setVariables(parsedVariables);
-    } catch (error) {
-      console.error("Invalid JSON:", error);
-    }
-  };
-
-  const handleVariableUpdate = (name: string, value: string) => {
-    setVariables((prevVariables) => ({
-      ...prevVariables,
-      [name]: value,
-    }));
-  };
+const TestPrompt: React.FC<TestPromptProps> = ({
+  promptContent,
+  promptFormat,
+}) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const extractVariables = useCallback((content: string, format: string) => {
     let regex: RegExp;
@@ -49,6 +37,15 @@ const TestPrompt = () => {
     return extractedVariables;
   }, []);
 
+  const initialVariables = useMemo(() => {
+    return extractVariables(promptContent, promptFormat);
+  }, [promptContent, promptFormat, extractVariables]);
+
+  const handleRunTest = (variables: { [key: string]: string }) => {
+    console.log("Running test with variables:", variables);
+    // Add your test logic here
+  };
+
   return (
     <Flex
       direction="column"
@@ -60,48 +57,19 @@ const TestPrompt = () => {
         <Text size="4" weight="bold">
           Test Prompt
         </Text>
-        <Button variant="soft">
-          <IconPlayerPlay size={16} strokeWidth={1.5} />
-        </Button>
-      </Flex>
-      <Flex>
-        <SegmentedControl.Root
-          defaultValue="table"
-          size="1"
-          onValueChange={setVariablesView}
-        >
-          <SegmentedControl.Item value="table">
-            Table View
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="json">JSON Input</SegmentedControl.Item>
-        </SegmentedControl.Root>
-      </Flex>
-      <Flex direction="column" className="flex-grow min-h-0 overflow-hidden">
-        {variablesView === "table" ? (
-          <VariablesTable
-            variables={variables}
-            onUpdate={handleVariableUpdate}
+        <Dialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog.Trigger>
+            <Button variant="soft">
+              <IconPlayerPlay size={16} strokeWidth={1.5} />
+            </Button>
+          </Dialog.Trigger>
+          <TestPromptDialog
+            initialVariables={initialVariables}
+            promptContent={promptContent}
+            promptFormat={promptFormat}
+            onRunTest={handleRunTest}
           />
-        ) : (
-          <div className="h-full overflow-auto">
-            <CodeMirror
-              value={JSON.stringify(variables, null, 2)}
-              onChange={handleVariablesChange}
-              extensions={[json()]}
-              basicSetup={{
-                lineNumbers: false,
-                foldGutter: false,
-                dropCursor: false,
-                allowMultipleSelections: false,
-                indentOnInput: false,
-              }}
-              style={{
-                fontSize: 12,
-                height: "100%",
-              }}
-            />
-          </div>
-        )}
+        </Dialog.Root>
       </Flex>
     </Flex>
   );
