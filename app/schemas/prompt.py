@@ -17,15 +17,12 @@ class PromptCreate(BaseModel):
     project_id: Optional[UUID] = None
     project_slug: Optional[str] = None
 
-    @classmethod
-    def validate_project_identifier(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        if not values.get('project_id') and not values.get('project_slug'):
-            raise ValueError('Either project_id or project_slug must be provided')
-        return values
-
-    @validator('project_id', 'project_slug')
-    def trigger_project_identifier_validation(cls, v: Any, values: Dict[str, Any]) -> Any:
-        cls.validate_project_identifier(values)
+    @validator('*', pre=True)
+    def validate_project_identifier(cls, v, values: Dict[str, Any]) -> Any:
+        # Only run this validation when we've collected all fields
+        if len(values) == len(cls.__fields__) - 1:  # -1 because we're currently validating the last field
+            if not values.get('project_id') and not values.get('project_slug'):
+                raise ValueError('Either project_id or project_slug must be provided')
         return v
 
 class PromptUpdate(BaseModel):

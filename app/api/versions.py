@@ -7,7 +7,7 @@ from app.db.database import get_db
 from app.models.version import Version
 from app.schemas.version import  VersionResponse
 
-router = APIRouter(prefix="/v1/prompts/{prompt_id}/versions")
+router = APIRouter(prefix="/v1/prompts/{prompt_id}/versions", tags=["versions"])
 
 @router.post("/", response_model=VersionResponse)
 def create_version(prompt_id: UUID, version: Version, db: Session = Depends(get_db)):

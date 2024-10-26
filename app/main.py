@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import collection, prompts, tags, inference, projects
+from app.api import collections, prompts, tags, inference, projects
 from app.db.database import engine, Base
 from app.models.prompt import Prompt
 from app.models.version import Version
@@ -41,7 +41,7 @@ async def debug_middleware(request: Request, call_next):
 # Include routers
 app.include_router(prompts.router)
 app.include_router(tags.router)
-app.include_router(collection.router, prefix="/v1/collections", tags=["categories"])
+app.include_router(collections.router)
 app.include_router(inference.router)
 app.include_router(projects.router)
 

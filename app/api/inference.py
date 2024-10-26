@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.inference import InferenceRequest, InferenceResponse
 from app.services.llm_registry import call_llm_api
 
-router = APIRouter(prefix="/v1/inference")
+router = APIRouter(prefix="/v1/inference", tags=["inference"])
 
 @router.post("/", response_model=InferenceResponse)
 async def run_inference(request: InferenceRequest):
