@@ -88,6 +88,7 @@ const PromptEditor = () => {
   const [newTag, setNewTag] = useState("");
   const [promptId, setPromptId] = useState<string | null>(urlId || null);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [isVersionChanging, setIsVersionChanging] = useState(false);
 
   const [createPrompt] = promptsAPI.useCreatePromptMutation();
   const [updatePrompt] = promptsAPI.useUpdatePromptMutation();
@@ -95,24 +96,26 @@ const PromptEditor = () => {
   const [deleteTag] = tagsApi.useDeleteTagMutation();
 
   const { data: existingPrompt, isLoading } = promptsAPI.useGetPromptQuery(
-    promptId,
+    { promptId, projectId: currentProjectId },
     {
-      skip: !promptId,
+      skip: !promptId || !currentProjectId,
     },
   );
   const { data: promptVersion } = promptsAPI.useGetPromptVersionQuery(
-    promptId && selectedVersion
+    promptId && selectedVersion && currentProjectId
       ? {
           promptId,
           version: selectedVersion,
+          projectId: currentProjectId,
         }
       : skipToken,
   );
 
   const { data: tags, isLoading: isLoadingTags } = tagsApi.useGetTagsQuery(
-    promptId && selectedVersion
-      ? { promptId, version: selectedVersion }
+    promptId && selectedVersion && currentProjectId
+      ? { promptId, version: selectedVersion, projectId: currentProjectId }
       : skipToken,
+    { refetchOnMountOrArgChange: true },
   );
 
   useEffect(() => {
@@ -126,9 +129,15 @@ const PromptEditor = () => {
     }
   }, [existingPrompt]);
 
+  const handleVersionChange = (value: string) => {
+    setIsVersionChanging(true);
+    setSelectedVersion(parseInt(value));
+  };
+
   useEffect(() => {
     if (promptVersion) {
       setContent(promptVersion.content);
+      setIsVersionChanging(false);
     }
   }, [promptVersion]);
 
@@ -145,22 +154,38 @@ const PromptEditor = () => {
 
   const handleSavePrompt = async () => {
     setIsSaving(true);
-    const promptData = {
+    const promptData: {
+      name: string;
+      slug: string;
+      description: string;
+      template_format: string;
+      content?: string;
+    } = {
       name,
       slug,
       description,
-      content,
       template_format: format,
-      project_id: currentProjectId,
     };
 
+    if (!promptId || content !== promptVersion?.content) {
+      promptData.content = content;
+    }
+
     try {
-      if (promptId) {
-        await updatePrompt({ promptId, body: promptData }).unwrap();
-      } else {
-        console.log(promptData);
-        const response = await createPrompt(promptData).unwrap();
-        setPromptId(response.id);
+      if (currentProjectId) {
+        if (promptId) {
+          await updatePrompt({
+            promptId,
+            projectId: currentProjectId,
+            body: promptData,
+          }).unwrap();
+        } else {
+          const response = await createPrompt({
+            body: promptData,
+            project_id: currentProjectId,
+          }).unwrap();
+          setPromptId(response.id);
+        }
       }
     } catch (error) {
       console.log("Error saving prompt:", error);
@@ -184,12 +209,15 @@ const PromptEditor = () => {
         return;
       }
       try {
-        await createTag({
-          promptId,
-          version: selectedVersion,
-          tag: { name: newTag },
-        }).unwrap();
-        setNewTag("");
+        if (currentProjectId) {
+          await createTag({
+            promptId,
+            version: selectedVersion,
+            tag: { name: newTag },
+            projectId: currentProjectId,
+          }).unwrap();
+          setNewTag("");
+        }
       } catch (error) {
         console.error("Failed to create tag:", error);
         // You might want to show an error message to the user here
@@ -204,12 +232,13 @@ const PromptEditor = () => {
       // Optionally show a message to user that latest tag cannot be deleted
       return;
     }
-    if (promptId && selectedVersion) {
+    if (promptId && selectedVersion && currentProjectId) {
       try {
         await deleteTag({
           promptId,
           version: selectedVersion,
           tagId,
+          projectId: currentProjectId,
         }).unwrap();
       } catch (error) {
         console.error("Failed to delete tag:", error);
@@ -228,19 +257,27 @@ const PromptEditor = () => {
   }, [name, slug, description, content]);
 
   const isUpdateValid = useCallback(() => {
-    if (!existingPrompt) return false;
+    if (!existingPrompt || !promptVersion || isVersionChanging) return false;
 
     const hasChanges =
       name.trim() !== existingPrompt.name ||
       slug.trim() !== existingPrompt.slug ||
       description?.trim() !== existingPrompt.description ||
-      content.trim() !== promptVersion?.content;
+      content.trim() !== promptVersion.content;
 
     const hasValidFields =
       name.trim() !== "" && slug.trim() !== "" && description?.trim() !== "";
 
     return hasChanges && hasValidFields;
-  }, [name, slug, description, content, existingPrompt, promptVersion]);
+  }, [
+    name,
+    slug,
+    description,
+    content,
+    existingPrompt,
+    promptVersion,
+    isVersionChanging,
+  ]);
 
   if (promptId && isLoading) return <div>Loading...</div>;
 
@@ -294,7 +331,8 @@ const PromptEditor = () => {
                   style={{
                     fontSize: 12,
                     border: "1px solid #ccc",
-                    borderRadius: "4px",
+                    padding: "4px",
+                    borderRadius: "6px",
                   }}
                 />
               </div>
@@ -401,9 +439,7 @@ const PromptEditor = () => {
                     </Text>
                     <Select.Root
                       value={`${selectedVersion}`}
-                      onValueChange={(value) =>
-                        setSelectedVersion(parseInt(value))
-                      }
+                      onValueChange={handleVersionChange}
                     >
                       <Select.Trigger
                         placeholder="Pick a Format"

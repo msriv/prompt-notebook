@@ -11,32 +11,37 @@ export const promptsAPI = createApi({
       providesTags: ["Prompts"],
     }),
     createPrompt: builder.mutation({
-      query: (body) => ({
-        url: "/",
+      query: ({ project_id, body }) => ({
+        url: "/?project_id=" + project_id,
         method: "POST",
         body,
       }),
       invalidatesTags: ["Prompts"],
     }),
     getPrompt: builder.query({
-      query: (promptId) => `/${promptId}`,
+      query: ({ promptId, projectId }) =>
+        `/${promptId}?project_id=${projectId}`,
       providesTags: ["Prompts"],
     }),
     getPromptVersion: builder.query({
-      query: ({ promptId, version }) => `/${promptId}/versions/${version}`,
+      query: ({ promptId, version, projectId }) =>
+        `/${promptId}/versions/${version}?project_id=${projectId}`,
       providesTags: ["Prompts"],
     }),
-    updatePrompt: builder.mutation<{}, { promptId: string; body: any }>({
-      query: ({ promptId, body }) => ({
-        url: `/${promptId}`,
+    updatePrompt: builder.mutation<
+      {},
+      { promptId: string; projectId: string; body: any }
+    >({
+      query: ({ promptId, projectId, body }) => ({
+        url: `/${promptId}?project_id=${projectId}`,
         method: "PUT",
         body,
       }),
       invalidatesTags: ["Prompts"],
     }),
     deletePrompt: builder.mutation({
-      query: (promptId) => ({
-        url: `/prompts/${promptId}`,
+      query: ({ promptId, projectId }) => ({
+        url: `/${promptId}?project_id=${projectId}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Prompts"],

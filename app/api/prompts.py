@@ -12,51 +12,54 @@ from app.models.project import Project
 from app.schemas.prompt import PromptCreate, PromptResponse, PromptUpdate, TemplateFormat
 from app.schemas.version import VersionResponse
 
-router = APIRouter(prefix="/v1/prompts")
+router = APIRouter(prefix="/v1/prompts", tags=["prompts"])
 
 @router.post("/", response_model=PromptResponse)
-def create_prompt(prompt: PromptCreate, db: Session = Depends(get_db)):
-    if prompt.project_id:
-        project = db.query(Project).filter(Project.id == prompt.project_id).first()
-    elif prompt.project_slug:
-        project = db.query(Project).filter(Project.slug == prompt.project_slug).first()
-    else:
-        raise HTTPException(status_code=400, detail="Either project_id or project_slug must be provided")
+def create_prompt(prompt: PromptCreate, project_id: Optional[UUID] = Query(None),
+    project_slug: Optional[str] = Query(None), db: Session = Depends(get_db)):
+        if not project_id and not project_slug:
+               raise HTTPException(status_code=400, detail="Either project_id or project_slug must be provided")
 
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        # Find the project
+        if project_id:
+            project = db.query(Project).filter(Project.id == project_id).first()
+        else:
+            project = db.query(Project).filter(Project.slug == project_slug).first()
 
-    db_prompt = Prompt(
-        name=prompt.name,
-        slug=prompt.slug,
-        description=prompt.description,
-        template_format=prompt.template_format,
-        project_id=project.id
-    )
-    db.add(db_prompt)
-    db.commit()
-    db.refresh(db_prompt)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
 
-    # Create initial version
-    initial_version = Version(prompt_id=db_prompt.id, version_number=1, content=prompt.content)
-    db.add(initial_version)
-    db.commit()
+        db_prompt = Prompt(
+            name=prompt.name,
+            slug=prompt.slug,
+            description=prompt.description,
+            template_format=prompt.template_format,
+            project_id=project.id
+        )
+        db.add(db_prompt)
+        db.commit()
+        db.refresh(db_prompt)
 
-    # Create 'latest' tag for the initial version
-    latest_tag = Tag(name="latest", version_id=initial_version.id)
-    db.add(latest_tag)
-    db.commit()
+        # Create initial version
+        initial_version = Version(prompt_id=db_prompt.id, version_number=1, content=prompt.content)
+        db.add(initial_version)
+        db.commit()
 
-    return PromptResponse(
-        id=UUID(str(db_prompt.id)),
-        name=str(db_prompt.name),
-        slug=str(db_prompt.slug),
-        description=str(db_prompt.description) if str(db_prompt.description) else None,
-        template_format=TemplateFormat(db_prompt.template_format),
-        versions=[1],
-        created_at=db_prompt.created_at.replace(tzinfo=None),
-        project_id=UUID(str(db_prompt.project_id))
-    )
+        # Create 'latest' tag for the initial version
+        latest_tag = Tag(name="latest", version_id=initial_version.id)
+        db.add(latest_tag)
+        db.commit()
+
+        return PromptResponse(
+            id=UUID(str(db_prompt.id)),
+            name=str(db_prompt.name),
+            slug=str(db_prompt.slug),
+            description=str(db_prompt.description) if str(db_prompt.description) else None,
+            template_format=TemplateFormat(db_prompt.template_format),
+            versions=[1],
+            created_at=db_prompt.created_at.replace(tzinfo=None),
+            project_id=UUID(str(db_prompt.project_id))
+        )
 
 @router.get("/", response_model=List[PromptResponse])
 def list_prompts(
@@ -141,17 +144,19 @@ def update_prompt(
         db.commit()
         db.refresh(new_version)
 
-        # Update latest tag
-        latest_tag = db.query(Tag).join(Version).filter(
+        # First, delete any existing "latest" tags for this prompt
+        existing_latest_tags = db.query(Tag).join(Version).filter(
             Tag.name == "latest",
             Version.prompt_id == db_prompt.id
-        ).first()
+        ).all()
 
-        if latest_tag:
-            latest_tag.version_id = new_version.id
-        else:
-            latest_tag = Tag(name="latest", version_id=new_version.id)
-            db.add(latest_tag)
+        for tag in existing_latest_tags:
+            db.delete(tag)
+
+        # Create new "latest" tag
+        new_latest_tag = Tag(name="latest", version_id=new_version.id)
+        db.add(new_latest_tag)
+        db.commit()
 
     db.commit()
     db.refresh(db_prompt)

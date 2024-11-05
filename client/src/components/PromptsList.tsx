@@ -13,14 +13,18 @@ import { promptsAPI } from "../store/api/prompts";
 import { useAppSelector } from "../store/hooks";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useNavigate } from "react-router-dom";
-import { useGetCollectionsQuery } from "../store/api/collections";
-import { useState } from "react";
+import {
+  collectionsApi,
+  useGetCollectionsQuery,
+} from "../store/api/collections";
+import { MouseEvent, useState } from "react";
 import {
   IconNotes,
   IconFolders,
   TablerIcon,
   IconCheck,
   IconCopy,
+  IconTrash,
 } from "@tabler/icons-react";
 
 interface Prompt {
@@ -39,9 +43,11 @@ interface Collection {
 
 interface CopyBadgeProps {
   slug: string;
+  onDelete?: (e: MouseEvent) => void;
+  showDelete?: boolean;
 }
 
-const CopyBadge = ({ slug }: CopyBadgeProps) => {
+const CopyBadge = ({ slug, onDelete, showDelete = false }: CopyBadgeProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = (e: React.MouseEvent) => {
@@ -51,20 +57,37 @@ const CopyBadge = ({ slug }: CopyBadgeProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) onDelete(e);
+  };
+
   return (
-    <Flex align="center" gap="1">
+    <Flex align="center" gap="2">
       <Badge size="1" color="violet">
         {slug}
       </Badge>
       <Tooltip content={copied ? "Copied!" : "Copy slug"}>
         <IconButton size="1" variant="ghost" onClick={handleCopy}>
           {copied ? (
-            <IconCheck size={14} strokeWidth={1.5} />
+            <IconCheck size={11} strokeWidth={1.5} />
           ) : (
-            <IconCopy size={14} strokeWidth={1.5} />
+            <IconCopy size={11} strokeWidth={1.5} />
           )}
         </IconButton>
       </Tooltip>
+      {showDelete && (
+        <Tooltip content="Delete">
+          <IconButton
+            size="1"
+            variant="ghost"
+            color="red"
+            onClick={handleDelete}
+          >
+            <IconTrash size={11} strokeWidth={1.5} />
+          </IconButton>
+        </Tooltip>
+      )}
     </Flex>
   );
 };
@@ -106,10 +129,47 @@ const PromptsList = () => {
     useGetCollectionsQuery(
       currentProjectId
         ? {
-            project_id: currentProjectId,
+            projectId: currentProjectId,
           }
         : skipToken,
     );
+
+  const [deletePrompt] = promptsAPI.useDeletePromptMutation();
+  const [deleteCollection] = collectionsApi.useDeleteCollectionMutation();
+
+  const handleDeletePrompt = async (promptId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete this prompt?")) {
+      try {
+        await deletePrompt({
+          promptId,
+          projectId: currentProjectId,
+        }).unwrap();
+      } catch (error) {
+        console.error("Failed to delete prompt:", error);
+      }
+    }
+  };
+
+  const handleDeleteCollection = async (
+    collectionId: string,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation();
+    if (
+      currentProjectId &&
+      confirm("Are you sure you want to delete this collection?")
+    ) {
+      try {
+        await deleteCollection({
+          collection_id: collectionId,
+          project_id: currentProjectId,
+        }).unwrap();
+      } catch (error) {
+        console.error("Failed to delete collection:", error);
+      }
+    }
+  };
 
   const renderPrompts = () => {
     if (isLoadingPrompts) return <div>Loading prompts...</div>;
@@ -132,13 +192,17 @@ const PromptsList = () => {
             onClick={() => navigate(`/prompts/${prompt.id}/edit`)}
           >
             <Box>
-              <Flex direction="row" gap="2">
-                <Text as="div" size="2" weight="bold">
+              <Flex direction="row" gap="2" justify={"between"}>
+                <Text as="div" size="2" weight="bold" truncate>
                   {prompt.name}
                 </Text>
-                <CopyBadge slug={prompt.slug} />
+                <CopyBadge
+                  slug={prompt.slug}
+                  showDelete={true}
+                  onDelete={(e) => handleDeletePrompt(prompt.id, e)}
+                />
               </Flex>
-              <Text as="div" size="2" color="gray">
+              <Text as="div" size="2" color="gray" truncate>
                 {prompt.description}
               </Text>
             </Box>
@@ -169,13 +233,19 @@ const PromptsList = () => {
             onClick={() => navigate(`/collections/${collection.slug}`)}
           >
             <Box>
-              <Flex direction="row" gap="2">
-                <Text as="div" size="2" weight="bold">
+              <Flex direction="row" gap="2" justify={"between"}>
+                <Text as="div" size="2" weight="bold" truncate>
                   {collection.name}
                 </Text>
-                <CopyBadge slug={collection.slug} />
+                <CopyBadge
+                  slug={collection.slug}
+                  showDelete={true}
+                  onDelete={(e: React.MouseEvent) => {
+                    handleDeleteCollection(collection.id, e);
+                  }}
+                />
               </Flex>
-              <Text as="div" size="2" color="gray">
+              <Text as="div" size="2" color="gray" truncate>
                 {collection.description}
               </Text>
             </Box>

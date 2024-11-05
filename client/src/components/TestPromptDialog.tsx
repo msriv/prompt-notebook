@@ -21,7 +21,6 @@ interface TestPromptDialogProps {
 const TestPromptDialog: React.FC<TestPromptDialogProps> = ({
   initialVariables,
   promptContent,
-  promptFormat,
   onRunTest,
 }) => {
   const [variablesView, setVariablesView] = useState("table");
@@ -39,10 +38,24 @@ const TestPromptDialog: React.FC<TestPromptDialogProps> = ({
   const handleJsonUpdate = (newJson: string) => {
     try {
       const parsedVariables = JSON.parse(newJson);
-      setVariables(parsedVariables);
+      // Only update values for existing keys
+      const updatedVariables = { ...variables };
+      Object.keys(variables).forEach((key) => {
+        if (key in parsedVariables) {
+          updatedVariables[key] = parsedVariables[key];
+        }
+      });
+      setVariables(updatedVariables);
     } catch (error) {
       console.error("Invalid JSON:", error);
     }
+  };
+
+  const getFormattedJson = () => {
+    const jsonLines = Object.entries(variables)
+      .map(([key, value]) => `  "${key}": "${value}"`)
+      .join(",\n");
+    return `{\n${jsonLines}\n}`;
   };
 
   const handleRunTest = () => {
@@ -79,7 +92,7 @@ const TestPromptDialog: React.FC<TestPromptDialogProps> = ({
           ) : (
             <div className="h-full overflow-auto">
               <CodeMirror
-                value={JSON.stringify(variables, null, 2)}
+                value={getFormattedJson()}
                 onChange={handleJsonUpdate}
                 extensions={[json()]}
                 basicSetup={{

@@ -47,23 +47,23 @@ export const collectionsApi = createApi({
   }),
   tagTypes: ["Collections"],
   endpoints: (builder) => ({
-    getCollections: builder.query<CollectionList[], { project_id: string }>({
-      query: ({ project_id }) => `/?project_id=${project_id}`,
+    getCollections: builder.query<CollectionList[], { projectId: string }>({
+      query: ({ projectId }) => `/?project_id=${projectId}`,
       providesTags: ["Collections"],
     }),
 
     getCollection: builder.query<
       CollectionWithPrompts,
-      { collection_id_or_slug: string; project_id: string }
+      { collection_id_or_slug: string; projectId: string }
     >({
-      query: ({ collection_id_or_slug, project_id }) =>
-        `/${collection_id_or_slug}?project_id=${project_id}`,
+      query: ({ collection_id_or_slug, projectId }) =>
+        `/${collection_id_or_slug}?project_id=${projectId}`,
       providesTags: ["Collections"],
     }),
 
     createCollection: builder.mutation<Collection, CreateCollectionRequest>({
       query: (body) => ({
-        url: "/",
+        url: `/`,
         method: "POST",
         body,
       }),
@@ -72,10 +72,14 @@ export const collectionsApi = createApi({
 
     updateCollection: builder.mutation<
       Collection,
-      { collection_id: string; body: UpdateCollectionRequest }
+      {
+        collection_id: string;
+        body: UpdateCollectionRequest;
+        project_id: string;
+      }
     >({
-      query: ({ collection_id, body }) => ({
-        url: `/${collection_id}`,
+      query: ({ collection_id, body, project_id }) => ({
+        url: `/${collection_id}?project_id=${project_id}`,
         method: "PUT",
         body,
       }),
@@ -84,10 +88,10 @@ export const collectionsApi = createApi({
 
     addPromptsToCollection: builder.mutation<
       { status: string },
-      { collection_id: string; prompt_ids: string[] }
+      { collection_id: string; prompt_ids: string[]; project_id: string }
     >({
-      query: ({ collection_id, prompt_ids }) => ({
-        url: `/${collection_id}/prompts`,
+      query: ({ collection_id, prompt_ids, project_id }) => ({
+        url: `/${collection_id}/prompts?project_id=${project_id}`,
         method: "POST",
         body: { prompt_ids },
       }),
@@ -96,10 +100,10 @@ export const collectionsApi = createApi({
 
     removePromptsFromCollection: builder.mutation<
       { status: string },
-      { collection_id: string; prompt_ids: string[] }
+      { collection_id: string; prompt_ids: string[]; project_id: string }
     >({
-      query: ({ collection_id, prompt_ids }) => ({
-        url: `/${collection_id}/prompts`,
+      query: ({ collection_id, prompt_ids, project_id }) => ({
+        url: `/${collection_id}/prompts?project_id=${project_id}`,
         method: "DELETE",
         body: { prompt_ids },
       }),
@@ -108,10 +112,10 @@ export const collectionsApi = createApi({
 
     deleteCollection: builder.mutation<
       { status: string },
-      { collection_id: string; recursive?: boolean }
+      { collection_id: string; recursive?: boolean; project_id: string }
     >({
-      query: ({ collection_id, recursive = false }) => ({
-        url: `/${collection_id}?recursive=${recursive}`,
+      query: ({ collection_id, recursive = false, project_id }) => ({
+        url: `/${collection_id}?project_id=${project_id}&recursive=${recursive}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Collections"],

@@ -1,6 +1,6 @@
 import { Flex, Select, Text } from "@radix-ui/themes";
 import { IconNotebook, IconPlus } from "@tabler/icons-react";
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import {
   useListProjectsQuery,
@@ -21,10 +21,12 @@ export default function App(): ReactElement {
   const [createProject] = useCreateProjectMutation();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const dispatch = useAppDispatch();
+  const [selectedProject, setSelectedProject] = useState<string>("");
 
   useEffect(() => {
     if (data && data.length > 0) {
       dispatch(setCurrentProject(data[0].id));
+      setSelectedProject(data[0].id);
     }
   }, [data, dispatch]);
 
@@ -37,6 +39,19 @@ export default function App(): ReactElement {
     setShowCreateDialog(false);
     refetch();
   };
+
+  const handleProjectChange = useCallback(
+    (value: string) => {
+      if (value === "new") {
+        setShowCreateDialog(true);
+      } else {
+        setSelectedProject(value);
+        dispatch(setCurrentProject(value));
+        navigate("/");
+      }
+    },
+    [dispatch, navigate],
+  );
 
   if (isFetching) return <div>Loading...</div>;
 
@@ -72,15 +87,8 @@ export default function App(): ReactElement {
           <Text>Prompt Notebook</Text>
         </Flex>
         <Select.Root
-          defaultValue={data[0].id}
-          onValueChange={(value) => {
-            if (value === "new") {
-              setShowCreateDialog(true);
-            } else {
-              dispatch(setCurrentProject(value));
-              navigate("/");
-            }
-          }}
+          value={selectedProject}
+          onValueChange={handleProjectChange}
         >
           <Select.Trigger placeholder="Select a project" />
           <Select.Content>

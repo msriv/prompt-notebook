@@ -28,7 +28,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
   );
   const { data: collections, isLoading } = useGetCollectionsQuery(
     {
-      project_id: currentProjectId!,
+      projectId: currentProjectId!,
     },
     { skip: !currentProjectId },
   );
@@ -36,11 +36,14 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
 
   const handleAddToCollection = async (collectionId: string) => {
     try {
-      await addToCollection({
-        collection_id: collectionId,
-        prompt_ids: [promptId],
-      }).unwrap();
-      setIsOpen(false); // Close dialog after successful addition
+      if (currentProjectId) {
+        await addToCollection({
+          collection_id: collectionId,
+          prompt_ids: [promptId],
+          project_id: currentProjectId,
+        }).unwrap();
+        setIsOpen(false); // Close dialog after successful addition
+      }
     } catch (error) {
       console.error("Failed to add prompt to collection:", error);
     }

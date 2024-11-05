@@ -15,37 +15,35 @@ export const tagsApi = createApi({
   tagTypes: ["Tags"],
   endpoints: (builder) => ({
     // Get all tags for a specific prompt version
-    getTags: builder.query<Tag[], { promptId: string; version: number }>({
-      query: ({ promptId, version }) => `/${promptId}/versions/${version}/tags`,
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: "Tags" as const, id })),
-              { type: "Tags", id: "LIST" },
-            ]
-          : [{ type: "Tags", id: "LIST" }],
+    getTags: builder.query<
+      Tag[],
+      { promptId: string; version: number; projectId: string }
+    >({
+      query: ({ promptId, version, projectId }) =>
+        `/${promptId}/versions/${version}/tags?project_id=${projectId}`,
+      providesTags: ["Tags"],
     }),
 
     // Create a new tag for a prompt version
     createTag: builder.mutation<
       Tag,
-      { promptId: string; version: number; tag: TagCreate }
+      { promptId: string; version: number; tag: TagCreate; projectId: string }
     >({
-      query: ({ promptId, version, tag }) => ({
-        url: `/${promptId}/versions/${version}/tags`,
+      query: ({ promptId, version, tag, projectId }) => ({
+        url: `/${promptId}/versions/${version}/tags?project_id=${projectId}`,
         method: "POST",
         body: tag,
       }),
-      invalidatesTags: [{ type: "Tags", id: "LIST" }],
+      invalidatesTags: ["Tags"],
     }),
 
     // Delete a tag from a prompt version
     deleteTag: builder.mutation<
       { status: string },
-      { promptId: string; version: number; tagId: string }
+      { promptId: string; version: number; tagId: string; projectId: string }
     >({
-      query: ({ promptId, version, tagId }) => ({
-        url: `/${promptId}/versions/${version}/tags/${tagId}`,
+      query: ({ promptId, version, tagId, projectId }) => ({
+        url: `/${promptId}/versions/${version}/tags/${tagId}?project_id=${projectId}`,
         method: "DELETE",
       }),
       invalidatesTags: [{ type: "Tags", id: "LIST" }],
@@ -59,9 +57,10 @@ export const tagsApi = createApi({
         content: string;
         created_at: string;
       },
-      { promptId: string; tagIdOrName: string }
+      { promptId: string; tagIdOrName: string; projectId: string }
     >({
-      query: ({ promptId, tagIdOrName }) => `/${promptId}/tags/${tagIdOrName}`,
+      query: ({ promptId, tagIdOrName, projectId }) =>
+        `/${promptId}/tags/${tagIdOrName}?project_id=${projectId}`,
     }),
   }),
 });
