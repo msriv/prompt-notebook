@@ -203,3 +203,26 @@
 2024-11-05 07:05:00,843 INFO reaped unknown pid 18 (exit status 0)
 2024-11-05 07:05:01,037 INFO stopped: react (exit status 0)
 2024-11-05 07:05:01,037 INFO reaped unknown pid 31 (exit status 0)
+2024-11-05 14:54:47,285 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-11-05 14:54:47,288 INFO supervisord started with pid 1
+2024-11-05 14:54:48,291 INFO spawned: 'react' with pid 8
+2024-11-05 14:54:48,294 INFO spawned: 'uvicorn' with pid 9
+2024-11-05 14:54:50,225 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-11-05 14:54:50,228 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-11-05 19:25:56,457 WARN received SIGTERM indicating exit request
+2024-11-05 19:25:56,465 INFO waiting for react, uvicorn to die
+2024-11-05 19:25:56,806 INFO stopped: uvicorn (exit status 0)
+2024-11-05 19:25:56,807 INFO reaped unknown pid 12 (exit status 0)
+2024-11-05 19:25:57,084 INFO stopped: react (exit status 0)
+2024-11-05 19:30:50,000 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-11-05 19:30:50,002 INFO supervisord started with pid 1
+2024-11-05 19:30:51,005 INFO spawned: 'react' with pid 8
+2024-11-05 19:30:51,044 INFO spawned: 'uvicorn' with pid 9
+2024-11-05 19:30:52,826 INFO success: react entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-11-05 19:30:52,826 INFO success: uvicorn entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-11-06 10:17:05,256 WARN received SIGTERM indicating exit request
+2024-11-06 10:17:05,261 INFO waiting for react, uvicorn to die
+2024-11-06 10:17:05,584 INFO stopped: uvicorn (exit status 0)
+2024-11-06 10:17:05,586 INFO reaped unknown pid 20 (exit status 0)
+2024-11-06 10:17:05,714 INFO stopped: react (exit status 0)
+2024-11-06 10:17:05,715 INFO reaped unknown pid 32 (exit status 0)

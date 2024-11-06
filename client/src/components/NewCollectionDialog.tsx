@@ -96,14 +96,25 @@ const Content = () => {
     if (!currentProjectId || !name.trim() || !slug.trim()) return;
 
     try {
-      const response = await createCollection({
+      const { id } = await createCollection({
         name: name.trim(),
         slug: slug.trim(),
         description: description.trim() || undefined,
         project_id: currentProjectId,
       }).unwrap();
 
-      // Reset and close...
+      // Reset form
+      setName("");
+      setSlug("");
+      setDescription("");
+
+      // Close dialog
+      onOpenChange(false);
+
+      // Call the callback if provided
+      if (onCollectionCreated) {
+        onCollectionCreated(id);
+      }
     } catch (error) {
       console.error("Failed to create collection:", error);
     }

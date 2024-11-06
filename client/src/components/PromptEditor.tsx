@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Button,
   Callout,
+  Dialog,
+  DropdownMenu,
   Flex,
   IconButton,
   Select,
@@ -12,7 +14,11 @@ import {
 import {
   IconArrowBack,
   IconDeviceFloppy,
+  IconDots,
+  IconFolderPlus,
+  IconGitCompare,
   IconInfoCircle,
+  IconTestPipe,
   IconX,
 } from "@tabler/icons-react";
 import { markdown } from "@codemirror/lang-markdown";
@@ -27,6 +33,8 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import TestPrompt from "./TestPrompt";
 import { tagsApi } from "../store/api/tags";
 import AddToCollectionDialog from "./AddToCollectionDialog";
+import VersionCompareDialog from "./VersionCompareDialog";
+import TestPromptDialog from "./TestPromptDialog";
 
 const customHighlighter = (format: string): Extension => {
   const variableRegex =
@@ -89,6 +97,11 @@ const PromptEditor = () => {
   const [promptId, setPromptId] = useState<string | null>(urlId || null);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [isVersionChanging, setIsVersionChanging] = useState(false);
+  const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
+  const [isAddToCollectionDialogOpen, setIsAddToCollectionDialogOpen] =
+    useState(false);
+  const [isVersionCompareDialogOpen, setIsVersionCompareDialogOpen] =
+    useState(false);
 
   const [createPrompt] = promptsAPI.useCreatePromptMutation();
   const [updatePrompt] = promptsAPI.useUpdatePromptMutation();
@@ -282,254 +295,323 @@ const PromptEditor = () => {
   if (promptId && isLoading) return <div>Loading...</div>;
 
   return (
-    <Flex direction="column" gap="2" className="h-full overflow-hidden">
-      <Flex direction="row" justify="between" mb="2" gap={"2"}>
-        <Button variant="soft" onClick={() => navigate("/")}>
-          <IconArrowBack strokeWidth={1.5} size={20} />
-          Back to Prompts
-        </Button>
-        <Flex gap="2">
-          {promptId && <AddToCollectionDialog promptId={promptId} />}
-          <Button
-            onClick={handleSavePrompt}
-            loading={isSaving}
-            disabled={promptId ? !isUpdateValid() : !isCreateValid()}
-          >
-            <IconDeviceFloppy strokeWidth={1.5} size={20} />
-            {promptId ? "Update Prompt" : "Create Prompt"}
+    <>
+      <Flex direction="column" gap="2" className="h-full overflow-hidden">
+        <Flex direction="row" justify="between" mb="2" gap={"2"}>
+          <Button variant="soft" onClick={() => navigate("/")}>
+            <IconArrowBack strokeWidth={1.5} size={20} />
+            Back to Prompts
           </Button>
+          <Flex gap="2">
+            <Button
+              onClick={handleSavePrompt}
+              loading={isSaving}
+              disabled={promptId ? !isUpdateValid() : !isCreateValid()}
+            >
+              <IconDeviceFloppy strokeWidth={1.5} size={20} />
+              {promptId ? "Update Prompt" : "Create Prompt"}
+            </Button>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger>
+                <Button variant="soft">
+                  <IconDots size={20} />
+                </Button>
+              </DropdownMenu.Trigger>
+
+              <DropdownMenu.Content>
+                <DropdownMenu.Item onClick={() => setIsTestDialogOpen(true)}>
+                  <IconTestPipe size={16} />
+                  Test Prompt
+                </DropdownMenu.Item>
+
+                {promptId && (
+                  <DropdownMenu.Item
+                    onClick={() => setIsAddToCollectionDialogOpen(true)}
+                  >
+                    <IconFolderPlus size={16} />
+                    Add to Collection
+                  </DropdownMenu.Item>
+                )}
+
+                {promptId && (
+                  <DropdownMenu.Item
+                    disabled={versions.length < 2}
+                    onClick={() => setIsVersionCompareDialogOpen(true)}
+                  >
+                    <IconGitCompare size={16} />
+                    Compare Versions
+                  </DropdownMenu.Item>
+                )}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </Flex>
         </Flex>
-      </Flex>
-      <Flex
-        direction="row"
-        gap="4"
-        className="flex-grow min-h-0 overflow-hidden"
-      >
         <Flex
-          direction="column"
-          gap="3"
-          className="w-8/12 min-h-0 overflow-hidden"
+          direction="row"
+          gap="4"
+          className="flex-grow min-h-0 overflow-hidden"
         >
           <Flex
             direction="column"
-            gap="2"
-            style={{ borderRadius: "var(--radius-3)" }}
-            className="border border-gray-200 p-4 flex-grow min-h-0 overflow-hidden"
+            gap="3"
+            className="w-8/12 min-h-0 overflow-hidden"
           >
-            <Text size="4" weight="bold">
-              Prompt Content
-            </Text>
             <Flex
               direction="column"
-              className="flex-grow min-h-0 overflow-hidden"
+              gap="2"
+              style={{ borderRadius: "var(--radius-3)" }}
+              className="border border-gray-200 p-4 flex-grow min-h-0 overflow-hidden"
             >
-              <div className="h-full overflow-auto">
-                <CodeMirror
-                  value={content}
-                  onChange={(value) => setContent(value)}
-                  extensions={extensions()}
-                  style={{
-                    fontSize: 12,
-                    border: "1px solid #ccc",
-                    padding: "4px",
-                    borderRadius: "6px",
-                  }}
-                />
-              </div>
+              <Text size="4" weight="bold">
+                Prompt Content
+              </Text>
+              <Flex
+                direction="column"
+                className="flex-grow min-h-0 overflow-hidden"
+              >
+                <div className="h-full overflow-auto">
+                  <CodeMirror
+                    value={content}
+                    onChange={(value) => setContent(value)}
+                    extensions={extensions()}
+                    style={{
+                      fontSize: 12,
+                      border: "1px solid #ccc",
+                      padding: "4px",
+                      borderRadius: "6px",
+                    }}
+                  />
+                </div>
+              </Flex>
             </Flex>
           </Flex>
-        </Flex>
-        <Flex
-          direction="column"
-          gap="3"
-          className="w-4/12 min-h-0 overflow-hidden"
-        >
           <Flex
             direction="column"
-            gap="2"
-            style={{ borderRadius: "var(--radius-3)" }}
-            className="border border-gray-200 p-4 overflow-auto"
+            gap="3"
+            className="w-4/12 min-h-0 overflow-hidden"
           >
-            <Text size="4" weight="bold">
-              Prompt Details
-            </Text>
-            <Flex direction="column" gap="3" flexGrow={"1"}>
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">
-                  Name
-                </Text>
-                <TextField.Root
-                  value={name}
-                  placeholder="Enter prompt name"
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    setSlug(
-                      e.target.value.toLowerCase().replace(/[\s_]+/g, "-"),
-                    );
-                  }}
-                />
-              </label>
-            </Flex>
-            <Flex direction="column" gap="3" flexGrow={"1"}>
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">
-                  Slug
-                </Text>
-                <TextField.Root
-                  value={slug}
-                  onChange={(e) =>
-                    setSlug(
-                      e.target.value.toLowerCase().replace(/[\s_]+/g, "-"),
-                    )
-                  }
-                  placeholder="enter-slug-here"
-                />
-              </label>
-            </Flex>
-            <Flex direction="column" gap="3" flexGrow={"1"}>
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">
-                  Description
-                </Text>
-                <TextArea
-                  value={description}
-                  placeholder="Enter prompt description"
-                  resize={"vertical"}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </label>
-            </Flex>
-            <Flex direction="column" gap="3" flexGrow={"1"}>
-              <label>
-                <Text as="div" size="2" mb="1" weight="bold">
-                  Template Format
-                </Text>
-                <Select.Root
-                  defaultValue="jinja2"
-                  value={format}
-                  onValueChange={(value) => setFormat(value)}
-                >
-                  <Select.Trigger
-                    placeholder="Pick a Format"
-                    className="w-full"
-                  />
-                  <Select.Content className="w-full">
-                    <Select.Item value="jinja2">Jinja2</Select.Item>
-                    <Select.Item value="f-string">F String</Select.Item>
-                  </Select.Content>
-                </Select.Root>
-              </label>
-              <Callout.Root size="1">
-                <Callout.Icon>
-                  <IconInfoCircle />
-                </Callout.Icon>
-                <Callout.Text>
-                  Use{" "}
-                  {format === "jinja2" ? " {{ variable }} " : " {variable} "}
-                  to insert variables into your prompt.
-                </Callout.Text>
-              </Callout.Root>
-            </Flex>
-            {promptId && (
-              <>
-                <Flex direction="column" gap="3" flexGrow={"1"}>
-                  <label>
-                    <Text as="div" size="2" mb="1" weight="bold">
-                      Versions
-                    </Text>
-                    <Select.Root
-                      value={`${selectedVersion}`}
-                      onValueChange={handleVersionChange}
-                    >
-                      <Select.Trigger
-                        placeholder="Pick a Format"
-                        className="w-full"
-                      />
-                      <Select.Content className="w-full">
-                        {versions.map((version, index) => (
-                          <Select.Item key={index} value={`${version}`}>
-                            {`v${version}`}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  </label>
-                </Flex>
-                <Flex direction="column" gap="3" flexGrow={"1"}>
+            <Flex
+              direction="column"
+              gap="2"
+              style={{ borderRadius: "var(--radius-3)" }}
+              className="border border-gray-200 p-4 overflow-auto"
+            >
+              <Text size="4" weight="bold">
+                Prompt Details
+              </Text>
+              <Flex direction="column" gap="3" flexGrow={"1"}>
+                <label>
                   <Text as="div" size="2" mb="1" weight="bold">
-                    Tags
+                    Name
                   </Text>
-                  <Flex direction="row" gap="2" wrap="wrap" mb="2">
-                    {isLoadingTags ? (
-                      <Text size="1">Loading tags...</Text>
-                    ) : !tags?.length ? (
-                      <Text size="1" className="text-gray-500">
-                        No tags yet
-                      </Text>
-                    ) : (
-                      tags.map((tag) => (
-                        <Flex
-                          key={tag.id}
-                          align="center"
-                          justify="between"
-                          py="1"
-                          style={{
-                            backgroundColor:
-                              tag.name === "latest"
-                                ? "var(--accent-4)"
-                                : "var(--accent-3)",
-                            borderRadius: "var(--radius-2)",
-                            position: "relative",
-                          }}
-                          className={
-                            tag.name === "latest" ? "opacity-50" : "pe-1"
-                          }
-                        >
-                          <Text size="1" className="px-2">
-                            {tag.name}
-                          </Text>
-                          {tag.name !== "latest" && (
-                            <IconButton
-                              variant="ghost"
-                              size="1"
-                              onClick={() => handleRemoveTag(tag.id, tag.name)}
-                            >
-                              <IconX strokeWidth={1.5} size={16} />
-                            </IconButton>
-                          )}
-                        </Flex>
-                      ))
-                    )}
-                  </Flex>
-                  <Flex direction="row" gap="2">
-                    <TextField.Root
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Enter a tag"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddTag();
-                        }
-                      }}
-                      style={{ zIndex: 0 }}
+                  <TextField.Root
+                    value={name}
+                    placeholder="Enter prompt name"
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setSlug(
+                        e.target.value.toLowerCase().replace(/[\s_]+/g, "-"),
+                      );
+                    }}
+                  />
+                </label>
+              </Flex>
+              <Flex direction="column" gap="3" flexGrow={"1"}>
+                <label>
+                  <Text as="div" size="2" mb="1" weight="bold">
+                    Slug
+                  </Text>
+                  <TextField.Root
+                    value={slug}
+                    onChange={(e) =>
+                      setSlug(
+                        e.target.value.toLowerCase().replace(/[\s_]+/g, "-"),
+                      )
+                    }
+                    placeholder="enter-slug-here"
+                  />
+                </label>
+              </Flex>
+              <Flex direction="column" gap="3" flexGrow={"1"}>
+                <label>
+                  <Text as="div" size="2" mb="1" weight="bold">
+                    Description
+                  </Text>
+                  <TextArea
+                    value={description}
+                    placeholder="Enter prompt description"
+                    resize={"vertical"}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </label>
+              </Flex>
+              <Flex direction="column" gap="3" flexGrow={"1"}>
+                <label>
+                  <Text as="div" size="2" mb="1" weight="bold">
+                    Template Format
+                  </Text>
+                  <Select.Root
+                    defaultValue="jinja2"
+                    value={format}
+                    onValueChange={(value) => setFormat(value)}
+                  >
+                    <Select.Trigger
+                      placeholder="Pick a Format"
+                      className="w-full"
                     />
-                    <Button
-                      onClick={handleAddTag}
-                      disabled={!newTag.trim() || !promptId || !selectedVersion}
-                      loading={isCreatingTag}
-                    >
-                      Add Tag
-                    </Button>
+                    <Select.Content className="w-full">
+                      <Select.Item value="jinja2">Jinja2</Select.Item>
+                      <Select.Item value="f-string">F String</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                </label>
+                <Callout.Root size="1">
+                  <Callout.Icon>
+                    <IconInfoCircle />
+                  </Callout.Icon>
+                  <Callout.Text>
+                    Use{" "}
+                    {format === "jinja2" ? " {{ variable }} " : " {variable} "}
+                    to insert variables into your prompt.
+                  </Callout.Text>
+                </Callout.Root>
+              </Flex>
+              {promptId && (
+                <>
+                  <Flex direction="column" gap="3" flexGrow={"1"}>
+                    <label>
+                      <Text as="div" size="2" mb="1" weight="bold">
+                        Versions
+                      </Text>
+                      <Select.Root
+                        value={`${selectedVersion}`}
+                        onValueChange={handleVersionChange}
+                      >
+                        <Select.Trigger
+                          placeholder="Pick a Format"
+                          className="w-full"
+                        />
+                        <Select.Content className="w-full">
+                          {versions.map((version, index) => (
+                            <Select.Item key={index} value={`${version}`}>
+                              {`v${version}`}
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
+                    </label>
                   </Flex>
-                </Flex>
-              </>
-            )}
+                  <Flex direction="column" gap="3" flexGrow={"1"}>
+                    <Text as="div" size="2" mb="1" weight="bold">
+                      Tags
+                    </Text>
+                    <Flex direction="row" gap="2" wrap="wrap" mb="2">
+                      {isLoadingTags ? (
+                        <Text size="1">Loading tags...</Text>
+                      ) : !tags?.length ? (
+                        <Text size="1" className="text-gray-500">
+                          No tags yet
+                        </Text>
+                      ) : (
+                        tags.map((tag) => (
+                          <Flex
+                            key={tag.id}
+                            align="center"
+                            justify="between"
+                            py="1"
+                            style={{
+                              backgroundColor:
+                                tag.name === "latest"
+                                  ? "var(--accent-4)"
+                                  : "var(--accent-3)",
+                              borderRadius: "var(--radius-2)",
+                              position: "relative",
+                            }}
+                            className={
+                              tag.name === "latest" ? "opacity-50" : "pe-1"
+                            }
+                          >
+                            <Text size="1" className="px-2">
+                              {tag.name}
+                            </Text>
+                            {tag.name !== "latest" && (
+                              <IconButton
+                                variant="ghost"
+                                size="1"
+                                onClick={() =>
+                                  handleRemoveTag(tag.id, tag.name)
+                                }
+                              >
+                                <IconX strokeWidth={1.5} size={16} />
+                              </IconButton>
+                            )}
+                          </Flex>
+                        ))
+                      )}
+                    </Flex>
+                    <Flex direction="row" gap="2">
+                      <TextField.Root
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Enter a tag"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddTag();
+                          }
+                        }}
+                        style={{ zIndex: 0 }}
+                      />
+                      <Button
+                        onClick={handleAddTag}
+                        disabled={
+                          !newTag.trim() || !promptId || !selectedVersion
+                        }
+                        loading={isCreatingTag}
+                      >
+                        Add Tag
+                      </Button>
+                    </Flex>
+                  </Flex>
+                </>
+              )}
+            </Flex>
           </Flex>
-          <TestPrompt promptFormat={format} promptContent={content} />
         </Flex>
       </Flex>
-    </Flex>
+      {promptId && (
+        <Dialog.Root open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
+          <TestPromptDialog
+            initialVariables={{}} // Pass extracted variables here
+            promptContent={content}
+            promptFormat={format}
+            onRunTest={(variables) => {
+              console.log("Testing with variables:", variables);
+              // Add your test logic here
+            }}
+          />
+        </Dialog.Root>
+      )}
+      {promptId && (
+        <AddToCollectionDialog
+          isOpen={isAddToCollectionDialogOpen}
+          onOpenChange={setIsAddToCollectionDialogOpen}
+          promptId={promptId}
+        >
+          <AddToCollectionDialog.Content />
+        </AddToCollectionDialog>
+      )}
+      {promptId && (
+        <VersionCompareDialog
+          promptId={promptId}
+          versions={versions}
+          isOpen={isVersionCompareDialogOpen}
+          onOpenChange={setIsVersionCompareDialogOpen}
+        >
+          <VersionCompareDialog.Content />
+        </VersionCompareDialog>
+      )}
+    </>
   );
 };
 
